@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>School Library System</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #1a1a1a;
+      --card: #f5f7fa;
+      --accent: #007bff;
+      --accent-hover: #0056b3;
+      --border: #dcdcdc;
+      --input-bg: #fafafa;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      box-sizing: border-box;
+    }
+
+    * {
+      box-sizing: inherit;
+    }
+
+    body.dark {
+      --bg: #121212;
+      --text: #f1f1f1;
+      --card: #1e1e1e;
+      --accent: #3399ff;
+      --accent-hover: #1976d2;
+      --border: #333;
+      --input-bg: #1a1a1a;
+    }
+
+    .taskbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--card);
+      padding: 1rem 2rem;
+      position: sticky;
+      top: 0;
+      z-index: 999;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+
+    .taskbar h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+
+    .taskbar nav {
+      display: flex;
+      gap: 12px;
+    }
+
+    .taskbar nav button {
+      padding: 10px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: 0.25s;
+    }
+
+    .taskbar nav button:hover {
+      background: var(--text);
+      color: var(--bg);
+      border-color: var(--text);
+      transform: translateY(-2px);
+    }
+
+    main {
+      padding: 2rem 3rem;
+    }
+
+    .section {
+      display: none;
+    }
+
+    .section.active {
+      display: block;
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    input, select, button {
+      margin: 10px 0;
+      padding: 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      width: 100%;
+      background: var(--input-bg);
+      color: var(--text);
+      font-size: 1rem;
+      transition: 0.2s;
+    }
+
+    input:focus, select:focus, button:focus {
+      border-color: var(--accent);
+      background: #fff;
+      outline: none;
+    }
+
+    #bookTable, #issuedList, #studentTable {
+      margin-top: 20px;
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    #bookTable th, #bookTable td, #studentTable th, #studentTable td {
+      border: 1px solid var(--border);
+      padding: 10px;
+      text-align: left;
+    }
+
+    #bookTable th, #studentTable th {
+      background: var(--card);
+      font-weight: 600;
+    }
+
+    #scrollToTopBtn {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      width: 52px;
+      height: 52px;
+      background-color: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      font-size: 22px;
+      cursor: pointer;
+      display: none;
+      transition: 0.3s ease;
+    }
+
+    #scrollToTopBtn.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    #scrollToTopBtn:hover {
+      background-color: var(--accent-hover);
+      transform: scale(1.08);
+    }
+
+    @media (max-width: 768px) {
+      main {
+        padding: 1rem;
+      }
+
+      .taskbar h1 {
+        font-size: 1.4rem;
+      }
+
+      .taskbar nav button {
+        padding: 8px 12px;
+      }
+
+      #scrollToTopBtn {
+        bottom: 16px;
+        right: 16px;
+        width: 44px;
+        height: 44px;
+      }
+    }
+      .issued-entry {
+  padding: 10px;
+  border: 1px solid #aaa;
+  border-radius: 6px;
+  margin-bottom: 10px;
+  background: #f9f9f9;
+}
+
+  </style>
+    <style>
+    /* Issued card styling */
+.issued-card {
+  background: #fff;
+  padding: 15px;
+  margin: 10px 0;
+  border-left: 5px solid #2196F3;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  transition: 0.3s;
+}
+.issued-card:hover {
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+}
+.issued-card h3 {
+  margin: 0 0 5px;
+  color: #333;
+}
+.card-buttons button {
+  margin: 5px 5px 0 0;
+  padding: 6px 10px;
+  border: none;
+  background: #2196F3;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.card-buttons button:hover {
+  background: #1976D2;
+}
+
+/* Popup styling */
+.popup {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.95);
+  color: #333;
+  border: 1px solid #888;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  max-width: 400px;
+  padding: 15px;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.popup h3 {
+  margin: 0 0 10px;
+}
+
+    </style>
+    <style>.popup-success {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 999;
+  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  animation: fadein 0.3s ease-in;
+}
+
+.issued-card {
+  background: #f0f8ff;
+  padding: 16px;
+  border-radius: 12px;
+  margin: 10px 0;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.history-modal {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.4);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 30px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+</style>
+    <style>/* spinner.css */
+
+.spinner-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: opacity 0.3s ease;
+}
+
+.spinner-overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.spinner {
+  width: 60px;
+  height: 60px;
+  border: 6px solid #d3d3d3;
+  border-top: 6px solid #3498db;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+/* Optional fancier spin effect */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+</style>
+</head>
+<body>
+<style>/* 🌟 Modern Login Page Styling */
+#loginPage {
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  animation: fadeIn 1s ease;
+}
+
+#loginForm {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  padding: 40px 30px;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.25);
+  text-align: center;
+  width: 100%;
+  max-width: 400px;
+  animation: popUp 0.8s ease;
+}
+
+#loginPage h1, #loginPage h2 {
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  margin-bottom: 10px;
+}
+
+#loginForm h2 {
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+#loginForm input {
+  width: 100%;
+  padding: 15px;
+  margin: 12px 0;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+  font-size: 1rem;
+  transition: 0.3s ease;
+}
+
+#loginForm input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+#loginForm input:focus {
+  background: rgba(255, 255, 255, 0.5);
+  color: #000;
+  outline: none;
+  box-shadow: 0 0 6px #ffffff;
+}
+
+#loginForm button {
+  width: 100%;
+  padding: 14px;
+  background: #ffffff;
+  color: #333;
+  border: none;
+  border-radius: 12px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+  margin-top: 10px;
+}
+
+#loginForm button:hover {
+  background: #1e90ff;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+#error {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  color: #ff4d4d;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes popUp {
+  from { transform: translateY(40px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  #loginForm {
+    padding: 30px 20px;
+  }
+
+  #loginForm input, #loginForm button {
+    font-size: 0.95rem;
+  }
+}
+</style>
+    <style>
+    #issuedList table {
+  width: 100%;
+  border-collapse: collapse;
+}
+#issuedList th, #issuedList td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  white-space: nowrap;
+  text-align: left;
+}
+#issuedList th {
+  background-color: #f8f8f8;
+}
+#issuedList tr:hover {
+  background-color: #f1f1f1;
+}
+</style>
+    
+    
+  <!-- Login Page --><center>
+  <div id="loginPage"><b>
+      <h1> St. Xavier's School</h1>
+      <h2>Library Management System</h2></b>
+    <form id="loginForm" onsubmit="login(event)">
+      <h2>🔐 Login</h2>
+      <input type="text" id="username" placeholder="Username"  style="width: 350px;" required /><br>
+      <input type="password" id="password" placeholder="Password" style="width: 350px;" required /><br>
+      <button type="submit" style="width: 250px; cursor: pointer;">Login</button>
+      <p id="error" style="color: red;"></p>
+    </form>
+  </div></center>
+
+  <!-- Main App -->
+  <div id="mainApp" style="display: none;">
+    <div class="taskbar">
+      <h1>📚 SCHOOL LIBRARY MANAGEMENT</h1>
+      <nav>
+        <button onclick="navigateTo('book-location')">Book Location</button>
+        <button onclick="navigateTo('issue-book')">Issue Book</button>
+        <button onclick="navigateTo('issued-books')">Issued Books</button>
+        <button onclick="navigateTo('student-details')">Student Details</button>
+        <button onclick="navigateTo('settings')">Settings</button>
+        <button onclick="toggleTheme()">🌙</button>
+      </nav>
+    </div>
+
+    <main>
+      <!-- Sections -->
+     <section id="book-location" class="section active">
+  <h2>Book Location</h2>
+  <input type="file" id="bookFolderUpload" webkitdirectory mozdirectory />
+  <input type="search" id="bookSearch" placeholder="Search all books..." />
+  <table id="bookTable"></table>
+</section>
+
+
+      <section id="issue-book" class="section">
+    <h2>Issue Book</h2>
+    <form id="issueForm">
+      <select id="issueType">
+        <option>Student</option>
+        <option>Teacher</option>
+        <option>Staff</option>
+      </select>
+      <input type="text" id="personName" placeholder="Registration Number/ID NUMBER" required />
+      <input type="text" id="studentName" placeholder="Name" required />
+      <input type="text" id="classes" placeholder="Class/section (for students only)"/>
+      <div id="studentDetailsDisplay" class="book-details"></div>
+     <!-- Issued history for selected user -->
+<div id="userIssuedHistory" class="book-history-table" style="margin-top: 10px;"></div>
+
+
+        
+      <input type="text" id="bookAcc" placeholder="Acc. No." required />
+      <div id="bookDetailsDisplay" class="book-details"></div>
+
+      <input type="text" id="bookTitle" placeholder="Book Title (auto-filled)" readonly />
+      <button type="submit">Issue</button>
+    </form>
+    <button onclick="openScanner()">Scan Barcode</button>
+    <div id="barcode-section"><video id="preview"></video></div>
+</section>
+ <!-- Pop-up message container -->
+<div id="popup" class="popup" style="display:none;">
+  <div class="popup-content" id="popupContent"></div>
+</div>
+
+
+      <section id="issued-books" class="section">
+        <h2>Issued Books</h2>
+          <!-- Add this dropdown above the search bar inside the issued-books section -->
+<select id="issuedFilter">
+  <option value="All">All</option>
+  <option value="Student">Student</option>
+  <option value="Teacher">Teacher</option>
+  <option value="Staff">Staff</option>
+</select>
+
+    
+          <input type="text" id="classWiseSearchInput" placeholder="🎯 Search by Class (e.g., 5D, 5-D, 5/D)" />
+<div id="classWiseResults"></div>
+
+        <div id="issuedList"></div>
+      </section>
+
+      <section id="student-details" class="section">
+  <h2>Upload Excel Data by Category</h2>
+  <label>Select Category:</label>
+  <select id="categorySelect" onchange="onCategoryChange()">
+    <option value="students">Students</option>
+    <option value="teachers">Teachers</option>
+    <option value="staffs">Staffs</option>
+  </select>
+  <input type="file" id="excelUpload" accept=".xlsx,.xls" />
+  <input type="search" id="categorySearch" placeholder="Search..." />
+  <table id="categoryTable"></table>
+</section>
+
+      <section id="settings" class="section">
+        <h2>Settings</h2>
+        <form id="settingsForm">
+          <input type="text" id="newUsername" placeholder="New Username" />
+          <input type="password" id="newPassword" placeholder="New Password" />
+          <button type="submit">Save</button>
+        </form>
+      </section>
+
+      <button onclick="logout()">Logout</button>
+    </main>
+  </div>
+
+  <button id="scrollToTopBtn" onclick="scrollToTop()">⬆</button>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>// spinner.js
+
+function showSpinner(duration = 500) {
+  const spinner = document.getElementById("loading-spinner");
+  if (!spinner) return;
+
+  spinner.classList.remove("hidden");
+
+  // Auto hide after duration (default 1.5s)
+  setTimeout(() => {
+    spinner.classList.add("hidden");
+  }, duration);
+}
+
+// Example: auto-show spinner on any button click
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("button, a").forEach(el => {
+    el.addEventListener("click", () => {
+      showSpinner();
+    });
+  });
+});
+</script>
+<script>
+  // Persistence Variables from LocalStorage
+  let currentSection = localStorage.getItem('currentSection') || 'book-location';
+  let currentCategory = localStorage.getItem('currentCategory') || 'students'; // Default category is students
+  let categoryData = JSON.parse(localStorage.getItem('categoryData')) || { students: [], teachers: [], staffs: [] };
+  let allSheetData = JSON.parse(localStorage.getItem('allSheetData')) || [];
+  let isLoggedIn = localStorage.getItem('isLoggedIn') === 'true'; // Check if user is logged in
+
+  // Check login status on page load
+  if (isLoggedIn) {
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('mainApp').style.display = 'block';
+  } else {
+    document.getElementById('loginPage').style.display = 'block';
+    document.getElementById('mainApp').style.display = 'none';
+  }
+
+  // Handle section navigation with persistence
+  function navigateTo(sectionId) {
+    document.querySelectorAll('.section').forEach((section) => {
+      section.classList.remove('active');
+    });
+    document.getElementById(sectionId).classList.add('active');
+    currentSection = sectionId;
+    localStorage.setItem('currentSection', sectionId); // Save to LocalStorage
+  }
+
+  // Handle login with persistence
+  function login(event) {
+    event.preventDefault();
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    if (username === 'admin' && password === 'admin123') {
+      localStorage.setItem('isLoggedIn', 'true'); // Set logged-in flag
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('mainApp').style.display = 'block';
+    } else {
+      document.getElementById('error').innerText = 'Invalid credentials!';
+    }
+  }
+
+  // Handle logout and clear session data
+  function logout() {
+    document.getElementById('loginPage').style.display = 'block';
+    document.getElementById('mainApp').style.display = 'none';
+    localStorage.removeItem('isLoggedIn'); // Remove logged-in flag
+    localStorage.removeItem('currentSection');
+    localStorage.removeItem('currentCategory');
+    localStorage.removeItem('categoryData');
+    localStorage.removeItem('allSheetData');
+  }
+
+  // Toggle theme between light and dark mode
+  function toggleTheme() {
+    document.body.classList.toggle('dark');
+  }
+
+  // Scroll to the top of the page
+  function scrollToTop() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  // Handle folder upload and display Excel files as tables
+  document.getElementById('bookFolderUpload').addEventListener('change', handleFileUpload, false);
+
+  // Handle file upload for the book-location section
+  function handleFileUpload(event) {
+    const files = event.target.files;
+    const excelFiles = Array.from(files).filter(file => file.name.endsWith('.xlsx') || file.name.endsWith('.xls'));
+
+    if (excelFiles.length === 0) {
+      alert("Please upload Excel files only.");
+      return;
+    }
+
+    allSheetData = [];
+    excelFiles.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        // Process each sheet in the workbook
+        workbook.SheetNames.forEach(sheetName => {
+          const sheet = workbook.Sheets[sheetName];
+          const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 });  // Get sheet data as an array of arrays
+          allSheetData.push(sheetData);
+        });
+
+        // Save to LocalStorage
+        localStorage.setItem('allSheetData', JSON.stringify(allSheetData));
+
+        // Render the data into a table after processing all files
+        renderTable(allSheetData);
+      };
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  // Function to render the table with book data
+  function renderTable(data) {
+    const table = document.getElementById('bookTable');
+    table.innerHTML = ''; // Clear the table before rendering new data
+
+    data.forEach(sheetData => {
+      sheetData.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        row.forEach((cell, colIndex) => {
+          const td = document.createElement('td');
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+
+        // Make the first row bold (header)
+        if (index === 0) {
+          tr.style.fontWeight = 'bold';
+        }
+
+        table.appendChild(tr);
+      });
+    });
+      highlightIssuedBooksInLocationTable();
+
+  }
+
+  // Search functionality for book-location data
+  document.getElementById('bookSearch').addEventListener('input', function() {
+    const query = this.value.toLowerCase();
+    const filteredData = filterTableData(query, allSheetData);
+    renderTable(filteredData);
+  });
+
+  // Function to filter table data based on search query
+  function filterTableData(query, data) {
+    if (!query) return data;  // If search is empty, return original data
+
+    return data.map(sheetData => {
+      return sheetData.filter(row => {
+        return row.some(cell => cell && cell.toString().toLowerCase().includes(query));
+      });
+    });
+  }
+
+  // Handle category selection change (for student-details section)
+  function onCategoryChange() {
+    currentCategory = document.getElementById('categorySelect').value;
+    localStorage.setItem('currentCategory', currentCategory); // Save to LocalStorage
+    renderCategoryTable(); // Update the table when category is changed
+  }
+
+  // Handle file upload for different categories (students, teachers, staffs)
+  document.getElementById('excelUpload').addEventListener('change', function(event) {
+    const files = event.target.files;
+    const excelFiles = Array.from(files).filter(file => file.name.endsWith('.xlsx') || file.name.endsWith('.xls'));
+
+    if (excelFiles.length === 0) {
+      alert("Please upload Excel files only.");
+      return;
+    }
+
+    // Clear the current category data before processing new data
+    categoryData[currentCategory] = [];
+
+    excelFiles.forEach(file => {
+      const reader = new FileReader();
+
+      reader.onload = function(e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+
+        // Process each sheet in the workbook
+        workbook.SheetNames.forEach(sheetName => {
+          const sheet = workbook.Sheets[sheetName];
+          const sheetData = XLSX.utils.sheet_to_json(sheet, { header: 1 });  // Get sheet data as an array of arrays
+          categoryData[currentCategory].push(sheetData); // Store the data for the current category
+        });
+
+        // Save category data to LocalStorage
+        localStorage.setItem('categoryData', JSON.stringify(categoryData));
+
+        // Render the table for the current category after processing the file
+        renderCategoryTable();
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+  });
+
+  // Function to render the category table (for students, teachers, staffs)
+  function renderCategoryTable() {
+    const table = document.getElementById('categoryTable');
+    table.innerHTML = ''; // Clear the table before rendering new data
+
+    const data = categoryData[currentCategory];
+
+    data.forEach(sheetData => {
+      sheetData.forEach((row, index) => {
+        const tr = document.createElement('tr');
+
+        row.forEach((cell, colIndex) => {
+          const td = document.createElement('td');
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+
+        // Make the first row bold (header)
+        if (index === 0) {
+          tr.style.fontWeight = 'bold';
+        }
+
+        table.appendChild(tr);
+      });
+    });
+  }
+
+  // Implementing search functionality for category table
+  document.getElementById('categorySearch').addEventListener('input', function() {
+    const query = this.value.toLowerCase();
+    const filteredData = filterCategoryData(query, categoryData[currentCategory]);
+    renderFilteredCategoryTable(filteredData);
+  });
+
+  // Function to filter category data based on search query
+  function filterCategoryData(query, data) {
+    if (!query) return data; // If search is empty, return the original data
+
+    return data.map(sheetData => {
+      return sheetData.filter(row => {
+        return row.some(cell => cell && cell.toString().toLowerCase().includes(query));
+      });
+    });
+  }
+
+  // Function to render filtered category data
+  function renderFilteredCategoryTable(filteredData) {
+    const table = document.getElementById('categoryTable');
+    table.innerHTML = ''; // Clear the table before rendering filtered data
+
+    filteredData.forEach(sheetData => {
+      sheetData.forEach((row, index) => {
+        const tr = document.createElement('tr');
+
+        row.forEach((cell, colIndex) => {
+          const td = document.createElement('td');
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+
+        // Make the first row bold (header)
+        if (index === 0) {
+          tr.style.fontWeight = 'bold';
+        }
+
+        table.appendChild(tr);
+      });
+    });
+  }
+
+  // Handle Acc. No. Input to Display Book Details (Persistence)
+  document.getElementById('bookAcc').addEventListener('input', function() {
+    const accNo = this.value.trim();
+    const displayDiv = document.getElementById('bookDetailsDisplay');
+
+    // Clear previous display
+    displayDiv.innerHTML = '';
+
+    if (!accNo || !allSheetData || allSheetData.length === 0) {
+      return;
+    }
+
+    let foundBook = null;
+
+    // Loop through book location data (uploaded sheets) to find the corresponding book details
+    allSheetData.forEach(sheetData => {
+      sheetData.forEach((row, index) => {
+        if (index === 0) return;  // Skip header row
+
+        const accNoIndex = sheetData[0].findIndex(header => header && header.toString().toLowerCase().includes("acc. no"));
+
+        if (accNoIndex >= 0 && row[accNoIndex] && row[accNoIndex].toString().trim() === accNo) {
+          foundBook = row;  // Book found
+        }
+      });
+    });
+
+    if (foundBook) {
+      const headers = allSheetData[0][0];
+      const html = foundBook.map((cell, i) => `<p><strong>${headers[i] || 'Field'}:</strong> ${cell}</p>`).join('');
+      displayDiv.innerHTML = `<div class="details-box">${html}</div>`;
+
+      // Auto-fill book title
+      const bookTitleIndex = headers.findIndex(header => header && header.toString().toLowerCase().includes("title"));
+      if (bookTitleIndex >= 0) {
+        document.getElementById('bookTitle').value = foundBook[bookTitleIndex] || '';  // Set the book title
+      }
+    } else {
+      displayDiv.innerHTML = `<p style="color:red;">No book found with that Acc. No.</p>`;
+    }
+  });
+
+</script>
+<script>
+// Utility functions
+function getToday() {
+  return new Date().toLocaleDateString();
+}
+
+function getReturnDate(type) {
+  let days = type === 'Student' ? 7 : 30; // 7 days for Student, 30 days for Teacher/Staff
+  let returnDate = new Date();
+  return new Date(returnDate.setDate(returnDate.getDate() + days)).toLocaleDateString();
+}
+
+function showPopup(message) {
+  const popup = document.createElement('div');
+  popup.className = 'popup-success';
+  popup.innerHTML = message;
+  document.body.appendChild(popup);
+  setTimeout(() => popup.remove(), 3000);
+}
+
+// Handle Book Issue
+document.getElementById('issueForm').addEventListener('submit', function (e) {
+  e.preventDefault();
+
+  const type = document.getElementById('issueType').value;
+  const reg = document.getElementById('personName').value;
+  const name = document.getElementById('studentName').value;
+  const classInfo = document.getElementById('classes').value;
+  const acc = document.getElementById('bookAcc').value;
+  const bookTitle = document.getElementById('bookTitle').value;
+
+  const issuedBooks = JSON.parse(localStorage.getItem('issuedBooks')) || [];
+
+  // Prevent duplicate issue of same book
+  if (issuedBooks.some(book => book.acc === acc)) {
+    showPopup(`❌ Book with Acc. No. ${acc} is already issued.`);
+    return;
+  }
+
+  const newEntry = {
+    type, reg, name, classInfo, acc, bookTitle,
+    issueDate: getToday(),
+    returnDate: getReturnDate(type)
+  };
+
+  issuedBooks.push(newEntry);
+  localStorage.setItem('issuedBooks', JSON.stringify(issuedBooks));
+
+  renderIssuedBooks();
+  showPopup(`✅ Book "<strong>${bookTitle}</strong>" issued to <strong>${name}</strong>.`);
+  e.target.reset();
+});
+
+// Render Issued Books
+function renderIssuedBooks(filterType = 'All', searchTerm = '') {
+  const list = document.getElementById('issuedList');
+  const issuedBooks = JSON.parse(localStorage.getItem('issuedBooks')) || [];
+
+  let filtered = filterType === 'All' ? issuedBooks : issuedBooks.filter(book => book.type === filterType);
+
+  if (searchTerm) {
+    filtered = filtered.filter(book =>
+      book.reg.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      book.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      book.bookTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      book.acc.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<p style="text-align:center;">No issued books found.</p>`;
+    return;
+  }
+
+  // Start table HTML
+  let tableHTML = `
+    <div style="overflow-x:auto;">
+      <table style="border-collapse:collapse; width:100%; min-width:1000px; font-size:14px;">
+        <thead>
+          <tr style="background:#f0f0f0; text-align:left;">
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Reg/ID</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Name</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Type</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Class</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Book Title</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Acc. No.</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Issued On</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Return By</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  const today = new Date();
+
+  filtered.forEach(book => {
+    const returnDate = new Date(book.returnDate);
+    const diff = (returnDate - today) / (1000 * 60 * 60 * 24);
+    let color = '#2ecc71'; // green
+    if (diff < 0) color = '#e74c3c'; // red
+    else if (diff <= 2) color = '#f1c40f'; // yellow
+
+    tableHTML += `
+      <tr onclick="showHistoryPopup('${book.reg}')" style="cursor:pointer;">
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap; font-size:15px;">${book.reg}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.name}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.type}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.classInfo || ''}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.bookTitle}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.acc}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.issueDate}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap; color:${color}; font-weight:bold;">${book.returnDate}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">
+         <button onclick="event.stopPropagation(); returnBook('${book.acc}')" 
+  style="width: 80px; padding: 6px 0; background:#f1c40f; color:#000; border:none; border-radius:4px; cursor:pointer;">
+  Return
+</button>
+<button onclick="event.stopPropagation(); reissueBook('${book.acc}')" 
+  style="width: 80px; padding: 6px 0; background:#3498db; color:white; border:none; border-radius:4px; cursor:pointer; margin-top:5px;">
+  Reissue
+</button>
+
+
+
+        </td>
+      </tr>
+    `;
+  });
+
+  tableHTML += `</tbody></table></div>`;
+  list.innerHTML = tableHTML;
+}
+
+// CLASS-WISE ISSUED BOOK SEARCH FUNCTIONALITY
+document.getElementById("classWiseSearchInput").addEventListener("input", function () {
+  const query = this.value.trim().toLowerCase().replace(/[^a-z0-9]/gi, '');
+  const container = document.getElementById("classWiseResults");
+  container.innerHTML = "";
+
+  if (!query) return;
+
+  const issuedBooks = JSON.parse(localStorage.getItem("issuedBooks")) || [];
+
+  // Filter by normalized class value
+  const classFiltered = issuedBooks.filter(book => {
+    const classInfo = (book.classInfo || "").toLowerCase().replace(/[^a-z0-9]/gi, '');
+    return classInfo.includes(query);
+  });
+
+  if (!classFiltered.length) {
+    container.innerHTML = `<p style="padding:10px;">❌ No issued books found for this class.</p>`;
+    return;
+  }
+
+  // Build table for filtered data
+  let tableHTML = `
+    <div style="overflow-x:auto;">
+      <table style="border-collapse:collapse; width:100%; min-width:1000px; font-size:14px;">
+        <thead>
+          <tr style="background:#f0f0f0;">
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Reg/ID</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Name</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Type</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Class</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Book Title</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Acc. No.</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Issued On</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Return By</th>
+            <th style="border:1px solid #ccc; padding:10px; white-space:nowrap;">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  const today = new Date();
+
+  classFiltered.forEach(book => {
+    const returnDate = new Date(book.returnDate);
+    const diff = (returnDate - today) / (1000 * 60 * 60 * 24);
+    let color = '#2ecc71'; // green
+    if (diff < 0) color = '#e74c3c'; // red
+    else if (diff <= 2) color = '#f1c40f'; // yellow
+
+    tableHTML += `
+      <tr onclick="showHistoryPopup('${book.reg}')" style="cursor:pointer;">
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.reg}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.name}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.type}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.classInfo || ''}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.bookTitle}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.acc}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.issueDate}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap; color:${color}; font-weight:bold;">${book.returnDate}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">
+          <button onclick="event.stopPropagation(); returnBook('${book.acc}')" style="padding:5px 0; background:#f1c40f; color:white; border:none; border-radius:4px; cursor:pointer;">Return</button>
+          <button onclick="event.stopPropagation(); reissueBook('${book.acc}')" style="padding:5px 10px; background:#3498db; color:white; border:none; border-radius:4px; cursor:pointer; margin-top:5px;">Reissue</button>
+        </td>
+      </tr>
+    `;
+  });
+
+  tableHTML += `</tbody></table></div>`;
+  container.innerHTML = tableHTML;
+});
+
+// Return Book
+function returnBook(acc) {
+  const issuedBooks = JSON.parse(localStorage.getItem('issuedBooks')) || [];
+  const updatedBooks = issuedBooks.filter(book => book.acc !== acc);
+  localStorage.setItem('issuedBooks', JSON.stringify(updatedBooks));
+
+  renderIssuedBooks();
+  showPopup(`🔁 Book with Acc. No. ${acc} returned.`);
+}
+
+// Reissue Book
+function reissueBook(acc) {
+  const issuedBooks = JSON.parse(localStorage.getItem('issuedBooks')) || [];
+  const book = issuedBooks.find(b => b.acc === acc);
+  if (book) {
+    book.issueDate = getToday();
+    book.returnDate = getReturnDate(book.type);
+    localStorage.setItem('issuedBooks', JSON.stringify(issuedBooks));
+    renderIssuedBooks();
+    showPopup(`🔁 Book "${book.bookTitle}" reissued to ${book.name}.`);
+  }
+}
+
+// View History
+function viewHistory(reg) {
+  const issuedBooks = JSON.parse(localStorage.getItem('issuedBooks')) || [];
+  const userBooks = issuedBooks.filter(b => b.reg === reg);
+
+  if (!userBooks.length) {
+    alert(`No pending books found for ${reg}`);
+    return;
+  }
+
+  const historyHTML = userBooks.map(book => `
+    <div style="margin-bottom:10px; padding:10px; background:#eef; border-radius:10px;">
+      <p><strong>${book.bookTitle}</strong> (Acc: ${book.acc})</p>
+      <p>Issued On: ${book.issueDate}</p>
+      <p>Return By: ${book.returnDate}</p>
+    </div>
+  `).join('');
+
+  const modal = document.createElement('div');
+  modal.className = 'history-modal';
+  modal.innerHTML = `
+    <div class="modal-content">
+      <h3>Pending books for ${reg}</h3>
+      ${historyHTML}
+      <button onclick="this.parentElement.parentElement.remove()">Close</button>
+    </div>
+  `;
+  document.body.appendChild(modal);
+}
+
+// Category Dropdown for filtering
+const categoryDropdown = document.createElement('select');
+['All', 'Student', 'Teacher', 'Staff'].forEach(type => {
+  const opt = document.createElement('option');
+  opt.value = type;
+  opt.textContent = type;
+  categoryDropdown.appendChild(opt);
+});
+categoryDropdown.addEventListener('change', (e) => renderIssuedBooks(e.target.value, searchInput.value));
+document.getElementById('issued-books').prepend(categoryDropdown);
+
+// Search Box for fast searching
+const searchInput = document.createElement('input');
+searchInput.type = 'text';
+searchInput.placeholder = 'Search by Reg. No., Name, Book Title, or Acc. No.';
+searchInput.addEventListener('input', () => renderIssuedBooks(categoryDropdown.value, searchInput.value));
+document.getElementById('issued-books').prepend(searchInput);
+
+// Initial render
+renderIssuedBooks();
+    
+    // Auto-fill person details in Issue Book section based on Reg. No./ID
+document.getElementById('personName').addEventListener('input', function () {
+  const regInput = this.value.trim();
+  const type = document.getElementById('issueType').value;
+  const nameField = document.getElementById('studentName');
+  const classField = document.getElementById('classes');
+
+  if (!regInput || !categoryData || !categoryData[type.toLowerCase() + 's']) return;
+
+  const categorySheets = categoryData[type.toLowerCase() + 's'];
+
+  for (const sheetData of categorySheets) {
+    const headers = sheetData[0];
+    for (let i = 1; i < sheetData.length; i++) {
+      const row = sheetData[i];
+      const regIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('reg'));
+      if (regIndex >= 0 && row[regIndex] && row[regIndex].toString().trim() === regInput) {
+        const nameIndex = headers.findIndex(h => h && /(name|student)/i.test(h.toString()));
+        const classIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('class'));
+        const sectionIndex = headers.findIndex(h => h && h.toString().toLowerCase().includes('section'));
+
+        if (nameIndex >= 0 && row[nameIndex]) {
+          nameField.value = row[nameIndex];
+        }
+
+        if (type === 'Student') {
+          if (classIndex >= 0 && row[classIndex]) {
+            classField.value = row[classIndex];
+          }
+          if (sectionIndex >= 0 && row[sectionIndex]) {
+            classField.value += `/${row[sectionIndex]}`;
+          }
+        }
+
+        // ✅ Add this line at the end
+        renderUserIssuedHistory(regInput);
+        return;
+      }
+    }
+  }
+});
+
+</script>
+    <script>function showHistoryPopup(reg) {
+  const issuedBooks = JSON.parse(localStorage.getItem('issuedBooks')) || [];
+  const userBooks = issuedBooks.filter(b => b.reg === reg);
+
+  if (!userBooks.length) {
+    alert(`No issued books found for ${reg}`);
+    return;
+  }
+
+  const rows = userBooks.map(book => `
+    <tr>
+      <td>${book.bookTitle}</td>
+      <td>${book.acc}</td>
+      <td>${book.issueDate}</td>
+      <td>${book.returnDate}</td>
+      <td><button onclick="returnBook('${book.acc}'); closePopup()">Return</button></td>
+    </tr>
+  `).join('');
+
+  const popupHTML = `
+    <div id="historyPopup" style="
+      position:fixed; top:0; left:0; width:100vw; height:100vh;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+      display:flex; justify-content:center; align-items:center; z-index:9999;">
+      <div style="
+        background:white; padding:30px; border-radius:10px;
+        max-width:600px; width:90%; overflow:auto;">
+        <h3>📖 Issued Books History - ${reg}</h3>
+        <table style="width:100%; border-collapse: collapse;">
+          <thead>
+            <tr>
+              <th>Book</th><th>Acc. No.</th><th>Issued On</th><th>Return By</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+        <br><button onclick="closePopup()">Close</button>
+      </div>
+    </div>
+  `;
+
+  const existing = document.getElementById('historyPopup');
+  if (existing) existing.remove();
+
+  document.body.insertAdjacentHTML('beforeend', popupHTML);
+}
+
+function closePopup() {
+  const popup = document.getElementById('historyPopup');
+  if (popup) popup.remove();
+}
+        function renderUserIssuedHistory(reg) {
+  const container = document.getElementById("userIssuedHistory");
+  const issuedBooks = JSON.parse(localStorage.getItem("issuedBooks")) || [];
+  const userBooks = issuedBooks.filter(book => book.reg === reg);
+
+  if (userBooks.length === 0) {
+    container.innerHTML = '';
+    return;
+  }
+
+  let table = `
+    <h4>📚 Previously Issued Books:</h4>
+    <div style="overflow-x:auto;">
+      <table style="width:100%; border-collapse:collapse; font-size:14px; margin-top:10px;">
+        <thead>
+          <tr style="background:#f0f0f0;">
+            <th style="border:1px solid #ccc; padding:8px; white-space:nowrap;">Book Title</th>
+            <th style="border:1px solid #ccc; padding:8px; white-space:nowrap;">Acc. No.</th>
+            <th style="border:1px solid #ccc; padding:8px; white-space:nowrap;">Issued On</th>
+            <th style="border:1px solid #ccc; padding:8px; white-space:nowrap;">Return By</th>
+          </tr>
+        </thead>
+        <tbody>
+  `;
+
+  userBooks.forEach(book => {
+    table += `
+      <tr>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.bookTitle}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.acc}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.issueDate}</td>
+        <td style="border:1px solid #ccc; padding:8px; white-space:nowrap;">${book.returnDate}</td>
+      </tr>
+    `;
+  });
+
+  table += '</tbody></table></div>';
+  container.innerHTML = table;
+}
+function highlightIssuedBooksInLocationTable() {
+  const issuedBooks = JSON.parse(localStorage.getItem("issuedBooks")) || [];
+  const issuedAccNos = issuedBooks.map(book => book.acc);
+
+  const table = document.getElementById("bookTable");
+  const rows = table.querySelectorAll("tr");
+
+  if (!rows || rows.length < 2) return;
+
+  const headerRow = rows[0];
+  const headers = Array.from(headerRow.children).map(cell => cell.textContent.trim().toLowerCase());
+
+  const accIndex = headers.findIndex(h => h.includes("acc. no"));
+
+  if (accIndex === -1) return;
+
+  // Loop through data rows
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+    const cells = row.children;
+    const acc = cells[accIndex]?.textContent.trim();
+
+    if (issuedAccNos.includes(acc)) {
+      row.style.color = 'red'; // Text turns red
+      row.style.fontWeight = 'bold'; // Optional: make it more visible
+    }
+  }
+}
+
+</script>
+    <script>// Smooth scrolling function
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+  anchor.addEventListener('click', function (e) {
+    e.preventDefault();
+    
+    // Scroll to the target element
+    document.querySelector(this.getAttribute('href')).scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  });
+});
+</script>
+<!-- spinner.html -->
+<div id="loading-spinner" class="spinner-overlay hidden">
+  <div class="spinner"></div>
+</div>
+
+</body>
+</html>
